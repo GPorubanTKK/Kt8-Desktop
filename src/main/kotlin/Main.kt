@@ -1,31 +1,75 @@
-import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.DeveloperMode
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tv
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import components.HorizontalSpacer
+import components.NavIcon
+import components.rememberMutableStateOf
+import kotlinx.coroutines.*
+import pages.Debugger
+import pages.Executor
+import pages.Profiler
+import pages.Settings
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 
-@Composable
-@Preview
-fun App() {
-    var text by remember { mutableStateOf("Hello, World!") }
-
-    MaterialTheme {
-        Button(onClick = {
-            text = "Hello, Desktop!"
-        }) {
-            Text(text)
+fun main() {
+    val buffer = ByteArrayOutputStream()
+    val customPrintStream = PrintStream(buffer)
+    System.setOut(customPrintStream)
+    println("hi")
+    application {
+        Window(
+            title = "Kt8 Emulator",
+            onCloseRequest = ::exitApplication
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                val (destination, setDestination) = rememberMutableStateOf(Destination.Executor)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.1f)
+                        .padding(bottom = 4.dp)
+                        .shadow(1.dp)
+                ) {
+                    HorizontalSpacer(10.dp)
+                    Destination.entries.forEach {
+                        NavIcon(
+                            it.title,
+                            it.icon,
+                            it,
+                            destination,
+                            setDestination
+                        )
+                        HorizontalSpacer(2.dp)
+                    }
+                }
+                Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
+                    when (destination) {
+                        Destination.Executor -> Executor(buffer)
+                        Destination.Screen -> Debugger()
+                        Destination.Profiler -> Profiler()
+                        Destination.Settings -> Settings()
+                    }
+                }
+            }
         }
     }
 }
 
-fun main() = application {
-    Window(onCloseRequest = ::exitApplication) {
-        App()
-    }
+enum class Destination(val title: String, val icon: ImageVector) {
+    Executor("Run", Icons.Filled.DeveloperMode),
+    Screen("Graphics", Icons.Filled.Tv),
+    Profiler("Memory Profiler", Icons.Filled.CalendarToday),
+    Settings("Settings", Icons.Filled.Settings)
 }
