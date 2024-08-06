@@ -21,7 +21,6 @@ import pages.Profiler
 import pages.Settings
 
 fun main() {
-    System.setOut(SharedState.state.customPrintStream)
     application {
         Window(
             title = "Kt8 Emulator",
@@ -51,7 +50,7 @@ fun main() {
                 }
                 Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
                     when (destination) {
-                        Destination.Executor -> Executor(SharedState.state.printBuffer)
+                        Destination.Executor -> Executor()
                         Destination.Screen -> Debugger()
                         Destination.Profiler -> Profiler()
                         Destination.Settings -> Settings()
