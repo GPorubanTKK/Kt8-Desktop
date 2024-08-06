@@ -18,7 +18,7 @@ repositories {
 dependencies {
     implementation(compose.desktop.currentOs)
     implementation(compose.materialIconsExtended)
-    implementation(files("C:\\Users\\Gedeon\\Desktop\\Projects\\Kt8-SDPU\\build\\libs\\Kt8-SDPU-1.0-SNAPSHOT.jar"))
+    implementation(files("C:\\Users\\Gedeon\\Desktop\\Projects\\Kt8-SDPU\\build\\libs\\Kt8-SDPU-1.2.jar"))
 }
 
 compose.desktop {

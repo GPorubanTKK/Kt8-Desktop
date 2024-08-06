@@ -13,20 +13,15 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import components.HorizontalSpacer
 import components.NavIcon
+import components.SharedState
 import components.rememberMutableStateOf
-import kotlinx.coroutines.*
 import pages.Debugger
 import pages.Executor
 import pages.Profiler
 import pages.Settings
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
 
 fun main() {
-    val buffer = ByteArrayOutputStream()
-    val customPrintStream = PrintStream(buffer)
-    System.setOut(customPrintStream)
-    println("hi")
+    System.setOut(SharedState.state.customPrintStream)
     application {
         Window(
             title = "Kt8 Emulator",
@@ -56,7 +51,7 @@ fun main() {
                 }
                 Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
                     when (destination) {
-                        Destination.Executor -> Executor(buffer)
+                        Destination.Executor -> Executor(SharedState.state.printBuffer)
                         Destination.Screen -> Debugger()
                         Destination.Profiler -> Profiler()
                         Destination.Settings -> Settings()

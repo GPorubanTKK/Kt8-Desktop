@@ -67,5 +67,6 @@ import components.VerticalSpacer
         SharedState.state.stackStart = stackStart
         SharedState.state.programMemory = programSize
         SharedState.state.programMemoryStart = programStart
+        SharedState.state.updateSettings()
     }) { Text("Apply Settings") }
 }
