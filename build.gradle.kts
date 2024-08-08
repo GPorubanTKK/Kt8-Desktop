@@ -6,7 +6,8 @@ plugins {
 }
 
 group = "com.rld"
-version = "1.0-SNAPSHOT"
+version = "1.0"
+val kt8Version = 1.6
 
 repositories {
     mavenCentral()
@@ -18,7 +19,7 @@ repositories {
 dependencies {
     implementation(compose.desktop.currentOs)
     implementation(compose.materialIconsExtended)
-    implementation(files("C:\\Users\\Gedeon\\Desktop\\Projects\\Kt8-SDPU\\build\\libs\\Kt8-SDPU-1.2.jar"))
+    implementation(files("C:\\Users\\Gedeon\\Desktop\\Projects\\Kt8-SDPU\\build\\libs\\Kt8-SDPU-$kt8Version.jar"))
 }
 
 compose.desktop {
