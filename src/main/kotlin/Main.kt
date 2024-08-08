@@ -13,10 +13,9 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import components.HorizontalSpacer
 import components.NavIcon
-import components.SharedState
 import components.rememberMutableStateOf
-import pages.Debugger
 import pages.Executor
+import pages.Graphics
 import pages.Profiler
 import pages.Settings
 
@@ -26,6 +25,7 @@ fun main() {
             title = "Kt8 Emulator",
             onCloseRequest = ::exitApplication
         ) {
+            val (getDebug, setDebug) = rememberMutableStateOf(false)
             Column(modifier = Modifier.fillMaxSize()) {
                 val (destination, setDestination) = rememberMutableStateOf(Destination.Executor)
                 Row(
@@ -50,8 +50,8 @@ fun main() {
                 }
                 Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
                     when (destination) {
-                        Destination.Executor -> Executor()
-                        Destination.Screen -> Debugger()
+                        Destination.Executor -> Executor(getDebug, setDebug)
+                        Destination.Screen -> Graphics()
                         Destination.Profiler -> Profiler()
                         Destination.Settings -> Settings()
                     }

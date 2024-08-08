@@ -6,6 +6,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
-@Composable fun Debugger() = Column(modifier = Modifier.fillMaxSize()) {
-    Text("Debugger")
+@Composable fun Graphics() = Column(modifier = Modifier.fillMaxSize()) {
+    Text("Graphics")
 }

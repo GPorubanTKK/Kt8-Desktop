@@ -7,5 +7,5 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable fun Profiler() = Column(modifier = Modifier.fillMaxSize()) {
-    Text("Memory Profiler")
+    Text("Memory profiler")
 }

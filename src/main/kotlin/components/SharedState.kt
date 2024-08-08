@@ -2,8 +2,6 @@ package components
 
 import Processor
 import Ram
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
 
 class SharedState private constructor() {
     var memory: UInt = 32768u
@@ -18,13 +16,11 @@ class SharedState private constructor() {
         ram = Ram(memory.toInt())
         processor = Processor(
             ram,
-            stackRange = (stackStart.toInt()..(stackStart+stackSize).toInt()),
-            programMemory = (programMemory.toInt()..(programMemoryStart+programMemory).toInt())
+            stackRange = (stackStart..(stackStart+stackSize)),
+            programMemory = (programMemory..(programMemoryStart+programMemory))
 
         )
     }
-
-    fun initProcessor(processor: Processor) { this.processor = processor }
 
     companion object {
         val state = SharedState()
