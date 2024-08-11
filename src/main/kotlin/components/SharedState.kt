@@ -10,6 +10,7 @@ class SharedState private constructor() {
     var programMemory: UInt = 16384u
     var programMemoryStart: UInt = 16384u
     var ram = Ram(memory.toInt())
+    var programReadStart: UInt = 16384u
     lateinit var processor: Processor
 
     fun updateSettings() {

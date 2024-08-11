@@ -4,6 +4,8 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.DeveloperMode
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tv
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -13,6 +15,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import components.HorizontalSpacer
 import components.NavIcon
+import components.SharedState
 import components.rememberMutableStateOf
 import pages.Executor
 import pages.Graphics
@@ -26,6 +29,14 @@ fun main() {
             onCloseRequest = ::exitApplication
         ) {
             val (getDebug, setDebug) = rememberMutableStateOf(false)
+            val executorStateMap = remember { mutableStateMapOf<String, Any>(
+                "path" to System.getProperty("user.home") + "\\Desktop\\or.gasm",
+                "content" to "",
+                "consoleText" to "",
+                "programLoaded" to false,
+                "programLength" to 0u,
+                "programCounter" to SharedState.state.programReadStart + 3u
+            ) }
             Column(modifier = Modifier.fillMaxSize()) {
                 val (destination, setDestination) = rememberMutableStateOf(Destination.Executor)
                 Row(
@@ -50,7 +61,11 @@ fun main() {
                 }
                 Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
                     when (destination) {
-                        Destination.Executor -> Executor(getDebug, setDebug)
+                        Destination.Executor -> Executor(
+                            getDebug,
+                            setDebug,
+                            executorStateMap
+                        )
                         Destination.Screen -> Graphics()
                         Destination.Profiler -> Profiler()
                         Destination.Settings -> Settings()
