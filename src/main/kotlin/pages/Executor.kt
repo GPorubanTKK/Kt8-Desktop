@@ -10,16 +10,18 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FastForward
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import components.HorizontalSpacer
+import components.SharedState
 import components.SharedState.Companion.state
 import components.VerticalSpacer
-import components.rememberMutableStateOf
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
@@ -28,14 +30,15 @@ import kotlin.math.min
 @Composable fun Executor(
     debug: Boolean,
     setDebug: (Boolean) -> Unit,
-    executorState: SnapshotStateMap<String, Any>
+    executorState: SnapshotStateMap<String, Any>,
+    setSp: (Int) -> Unit,
+    setMu: (Int) -> Unit
 ) = Column(modifier = Modifier.fillMaxSize()) {
     val crScope = rememberCoroutineScope { Dispatchers.IO }
     VerticalSpacer(5.dp)
     Text("Run Source File:")
     SideEffect {
         try { state.processor.toString() } catch(e: Exception) {
-            println("initializing processor")
             state.processor = Processor(
                 state.ram,
                 stackRange = (state.stackStart..(state.stackStart+state.stackSize)),
@@ -43,6 +46,8 @@ import kotlin.math.min
                 outputStream = object : WriteTarget { override fun print(str: String) {
                     executorState["consoleText"] = executorState["consoleText"]!! as String + str
                 } },
+                onMemoryUpdate = { pc -> setMu(pc) },
+                onStackUpdate = { ptr -> setSp(ptr) }
             )
         }
     }
@@ -57,7 +62,7 @@ import kotlin.math.min
         HorizontalSpacer(10.dp)
         Button({
             val compiledGasm = Compiler().compileGasm(executorState["content"]!! as String)
-            state.ram.clear()
+            state.processor.reset()
             state.ram.load(compiledGasm, state.programReadStart.toInt())
             executorState["programLoaded"] = true
             executorState["programLength"] = (compiledGasm.size - 3).toUInt()
@@ -68,25 +73,25 @@ import kotlin.math.min
             executorState["programLoaded"] = false
             executorState["consoleText"] = ""
             executorState["programCounter"] = state.programReadStart + 3u
-            crScope.async {
+            crScope.launch {
                 state.processor.execute(state.programReadStart)
             }
+            setDebug(false)
         }) { Text("Run") }
         HorizontalSpacer(10.dp)
         Button({
             setDebug(true)
             executorState["programCounter"] = state.programReadStart + 3u
-            crScope.async {
+            crScope.launch {
                 state.processor.execute(state.programReadStart) { pc ->
-                    println("processor counter: $pc  ui counter: ${executorState["programCounter"]}")
                     (executorState["programCounter"] as UInt == pc)
                 }
+                setDebug(false)
             }
         }) { Text("Debug") }
         HorizontalSpacer(10.dp)
         Button({
             executorState["programCounter"] = min(executorState["programLength"] as UInt + executorState["programCounter"] as UInt, executorState["programCounter"] as UInt + 3u)
-            println("updated to: ${executorState["programCounter"]}")
         }, enabled = debug) { Icon(Icons.Filled.FastForward, "") }
     }
     VerticalSpacer(12.dp)

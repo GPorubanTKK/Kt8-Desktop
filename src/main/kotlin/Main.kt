@@ -1,11 +1,10 @@
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Button
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.DeveloperMode
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Tv
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -17,10 +16,13 @@ import components.HorizontalSpacer
 import components.NavIcon
 import components.SharedState
 import components.rememberMutableStateOf
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import pages.Executor
 import pages.Graphics
 import pages.Profiler
 import pages.Settings
+import kotlin.math.min
 
 fun main() {
     application {
@@ -29,6 +31,9 @@ fun main() {
             onCloseRequest = ::exitApplication
         ) {
             val (getDebug, setDebug) = rememberMutableStateOf(false)
+            val (getSp, setSp) = rememberMutableStateOf(0)
+            val (getMu, setMu) = rememberMutableStateOf(0)
+            val globalCrScope = rememberCoroutineScope { Dispatchers.IO }
             val executorStateMap = remember { mutableStateMapOf<String, Any>(
                 "path" to System.getProperty("user.home") + "\\Desktop\\or.gasm",
                 "content" to "",
@@ -58,16 +63,45 @@ fun main() {
                         )
                         HorizontalSpacer(2.dp)
                     }
+                    HorizontalSpacer(25.dp)
+                    if(destination != Destination.Executor) {
+                        Button({
+                            executorStateMap["programLoaded"] = false
+                            executorStateMap["consoleText"] = ""
+                            executorStateMap["programCounter"] = SharedState.state.programReadStart + 3u
+                            globalCrScope.launch {
+                                SharedState.state.processor.execute(SharedState.state.programReadStart)
+                            }
+                            setDebug(false)
+                        }) { Text("Run") }
+                        HorizontalSpacer(10.dp)
+                        Button({
+                            setDebug(true)
+                            executorStateMap["programCounter"] = SharedState.state.programReadStart + 3u
+                            globalCrScope.launch {
+                                SharedState.state.processor.execute(SharedState.state.programReadStart) { pc ->
+                                    (executorStateMap["programCounter"] as UInt == pc)
+                                }
+                                setDebug(false)
+                            }
+                        }) { Text("Debug") }
+                        HorizontalSpacer(10.dp)
+                        Button({
+                            executorStateMap["programCounter"] = min(executorStateMap["programLength"] as UInt + executorStateMap["programCounter"] as UInt, executorStateMap["programCounter"] as UInt + 3u)
+                        }, enabled = getDebug) { Icon(Icons.Filled.FastForward, "") }
+                    }
                 }
                 Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
                     when (destination) {
                         Destination.Executor -> Executor(
                             getDebug,
                             setDebug,
-                            executorStateMap
+                            executorStateMap,
+                            setSp,
+                            setMu
                         )
                         Destination.Screen -> Graphics()
-                        Destination.Profiler -> Profiler()
+                        Destination.Profiler -> Profiler(getSp, getMu)
                         Destination.Settings -> Settings()
                     }
                 }
