@@ -17,7 +17,6 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import components.HorizontalSpacer
-import components.SharedState
 import components.SharedState.Companion.state
 import components.VerticalSpacer
 import kotlinx.coroutines.Dispatchers
