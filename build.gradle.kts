@@ -7,7 +7,7 @@ plugins {
 
 group = "com.rld"
 version = "1.0"
-val kt8Version = 1.8
+val kt8Version = "1.0.0"
 
 repositories {
     mavenCentral()

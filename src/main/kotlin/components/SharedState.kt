@@ -6,7 +6,7 @@ import Ram
 class SharedState private constructor() {
     var memory: UInt = 32768u
     var stackSize: UInt = 1024u
-    var stackStart: UInt = 1u
+    var stackStart: UInt = 0u
     var programMemory: UInt = 16384u
     var programMemoryStart: UInt = 16384u
     var ram = Ram(memory.toInt())
@@ -15,12 +15,6 @@ class SharedState private constructor() {
 
     fun updateSettings() {
         ram = Ram(memory.toInt())
-        processor = Processor(
-            ram,
-            stackRange = (stackStart..(stackStart+stackSize)),
-            programMemory = (programMemory..(programMemoryStart+programMemory))
-
-        )
     }
 
     companion object {

@@ -30,7 +30,6 @@ import kotlin.math.min
     debug: Boolean,
     setDebug: (Boolean) -> Unit,
     executorState: SnapshotStateMap<String, Any>,
-    setSp: (Int) -> Unit,
     setMu: (Int) -> Unit
 ) = Column(modifier = Modifier.fillMaxSize()) {
     val crScope = rememberCoroutineScope { Dispatchers.IO }
@@ -45,8 +44,10 @@ import kotlin.math.min
                 outputStream = object : WriteTarget { override fun print(str: String) {
                     executorState["consoleText"] = executorState["consoleText"]!! as String + str
                 } },
-                onMemoryUpdate = { pc -> setMu(pc) },
-                onStackUpdate = { ptr -> setSp(ptr) }
+                onMemoryUpdate = { pc ->
+                    println("Updating fn: $pc")
+                    setMu(pc)
+                },
             )
         }
     }
@@ -60,31 +61,34 @@ import kotlin.math.min
         }) { Text("Load") }
         HorizontalSpacer(10.dp)
         Button({
-            val compiledGasm = Compiler().compileGasm(executorState["content"]!! as String)
-            state.processor.reset()
-            state.ram.load(compiledGasm, state.programReadStart.toInt())
-            executorState["programLoaded"] = true
-            executorState["programLength"] = (compiledGasm.size - 3).toUInt()
-            executorState["programCounter"] = state.programReadStart + 3u
+            try {
+                val compiledGasm = Compiler().compileGasm(executorState["content"]!! as String)
+                println("Compiled gASM ${compiledGasm.toList()}")
+                state.processor.reset()
+                state.ram.load(compiledGasm, state.programReadStart.toInt())
+                executorState["programLoaded"] = true
+                executorState["programLength"] = (compiledGasm.size - 3).toUInt()
+                executorState["programCounter"] = state.programReadStart + 3u
+            } catch(e: Exception) { println("Error: ${e.message ?: "Unknown Error"}") }
         }) { Text("Compile") }
         HorizontalSpacer(10.dp)
         Button({
             executorState["programLoaded"] = false
             executorState["consoleText"] = ""
-            executorState["programCounter"] = state.programReadStart + 3u
             crScope.launch {
-                state.processor.execute(state.programReadStart)
+                try {
+                    state.processor.execute(state.programReadStart.toUShort())
+                } catch(e: Exception) { executorState["consoleText"] = "Error: ${e.message ?: "Unknown Error"}" }
             }
             setDebug(false)
         }) { Text("Run") }
         HorizontalSpacer(10.dp)
         Button({
             setDebug(true)
-            executorState["programCounter"] = state.programReadStart + 3u
             crScope.launch {
-                state.processor.execute(state.programReadStart) { pc ->
-                    (executorState["programCounter"] as UInt == pc)
-                }
+                try {
+                    state.processor.execute(state.programReadStart.toUShort()) { pc -> ((executorState["programCounter"] as UInt).toUShort() == pc) }
+                } catch(e: Exception) { executorState["consoleText"] = e.message ?: "Unknown Error" }
                 setDebug(false)
             }
         }) { Text("Debug") }

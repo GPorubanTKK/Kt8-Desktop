@@ -31,11 +31,10 @@ fun main() {
             onCloseRequest = ::exitApplication
         ) {
             val (getDebug, setDebug) = rememberMutableStateOf(false)
-            val (getSp, setSp) = rememberMutableStateOf(0)
             val (getMu, setMu) = rememberMutableStateOf(0)
             val globalCrScope = rememberCoroutineScope { Dispatchers.IO }
             val executorStateMap = remember { mutableStateMapOf<String, Any>(
-                "path" to System.getProperty("user.home") + "\\Desktop\\or.gasm",
+                "path" to System.getProperty("user.home") + "\\Desktop\\src.gasm",
                 "content" to "",
                 "consoleText" to "",
                 "programLoaded" to false,
@@ -70,17 +69,17 @@ fun main() {
                             executorStateMap["consoleText"] = ""
                             executorStateMap["programCounter"] = SharedState.state.programReadStart + 3u
                             globalCrScope.launch {
-                                SharedState.state.processor.execute(SharedState.state.programReadStart)
+                                SharedState.state.processor.execute(SharedState.state.programReadStart.toUShort())
                             }
                             setDebug(false)
                         }) { Text("Run") }
                         HorizontalSpacer(10.dp)
                         Button({
                             setDebug(true)
-                            executorStateMap["programCounter"] = SharedState.state.programReadStart + 3u
+                            executorStateMap["programCounter"] = SharedState.state.programReadStart
                             globalCrScope.launch {
-                                SharedState.state.processor.execute(SharedState.state.programReadStart) { pc ->
-                                    (executorStateMap["programCounter"] as UInt == pc)
+                                SharedState.state.processor.execute(SharedState.state.programReadStart.toUShort()) { pc ->
+                                    ((executorStateMap["programCounter"] as UInt).toUShort() == pc)
                                 }
                                 setDebug(false)
                             }
@@ -97,11 +96,10 @@ fun main() {
                             getDebug,
                             setDebug,
                             executorStateMap,
-                            setSp,
                             setMu
                         )
                         Destination.Screen -> Graphics()
-                        Destination.Profiler -> Profiler(getSp, getMu)
+                        Destination.Profiler -> Profiler(getMu)
                         Destination.Settings -> Settings()
                     }
                 }
