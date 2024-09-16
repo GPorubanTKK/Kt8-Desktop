@@ -14,7 +14,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import components.HorizontalSpacer
 import components.NavIcon
-import components.SharedState
+import components.SharedState.Companion.STATE
 import components.rememberMutableStateOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,12 +34,12 @@ fun main() {
             val (getMu, setMu) = rememberMutableStateOf(0)
             val globalCrScope = rememberCoroutineScope { Dispatchers.IO }
             val executorStateMap = remember { mutableStateMapOf<String, Any>(
-                "path" to System.getProperty("user.home") + "\\Desktop\\src.gasm",
+                "path" to "${System.getProperty("user.home")}\\Desktop\\src.gasm",
                 "content" to "",
                 "consoleText" to "",
                 "programLoaded" to false,
                 "programLength" to 0u,
-                "programCounter" to SharedState.state.programReadStart + 3u
+                "programCounter" to STATE.programReadStart + 3u
             ) }
             Column(modifier = Modifier.fillMaxSize()) {
                 val (destination, setDestination) = rememberMutableStateOf(Destination.Executor)
@@ -67,18 +67,18 @@ fun main() {
                         Button({
                             executorStateMap["programLoaded"] = false
                             executorStateMap["consoleText"] = ""
-                            executorStateMap["programCounter"] = SharedState.state.programReadStart + 3u
+                            executorStateMap["programCounter"] = STATE.programReadStart + 3u
                             globalCrScope.launch {
-                                SharedState.state.processor.execute(SharedState.state.programReadStart.toUShort())
+                                STATE.processor.execute(STATE.programReadStart)
                             }
                             setDebug(false)
                         }) { Text("Run") }
                         HorizontalSpacer(10.dp)
                         Button({
                             setDebug(true)
-                            executorStateMap["programCounter"] = SharedState.state.programReadStart
+                            executorStateMap["programCounter"] = STATE.programReadStart
                             globalCrScope.launch {
-                                SharedState.state.processor.execute(SharedState.state.programReadStart.toUShort()) { pc ->
+                                STATE.processor.execute(STATE.programReadStart) { pc ->
                                     ((executorStateMap["programCounter"] as UInt).toUShort() == pc)
                                 }
                                 setDebug(false)

@@ -3,7 +3,9 @@ package pages
 import Compiler
 import Processor
 import WriteTarget
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -14,11 +16,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateMap
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import components.HorizontalSpacer
-import components.SharedState.Companion.state
+import components.SharedState.Companion.STATE
 import components.VerticalSpacer
+import components.maxSize
+import components.maxWidth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
@@ -31,16 +34,16 @@ import kotlin.math.min
     setDebug: (Boolean) -> Unit,
     executorState: SnapshotStateMap<String, Any>,
     setMu: (Int) -> Unit
-) = Column(modifier = Modifier.fillMaxSize()) {
+) = Column(modifier = maxSize) {
     val crScope = rememberCoroutineScope { Dispatchers.IO }
     VerticalSpacer(5.dp)
     Text("Run Source File:")
     SideEffect {
-        try { state.processor.toString() } catch(e: Exception) {
-            state.processor = Processor(
-                state.ram,
-                stackRange = (state.stackStart..(state.stackStart+state.stackSize)),
-                programMemory = (state.programMemory..(state.programMemoryStart+state.programMemory)),
+        try { STATE.processor.toString() } catch(e: Exception) {
+            STATE.processor = Processor(
+                STATE.ram,
+                stackRange = (STATE.stackStart..(STATE.stackStart + STATE.stackSize).toUShort()),
+                programMemory = (STATE.programMemory..(STATE.programMemoryStart+STATE.programMemory).toUShort()),
                 outputStream = object : WriteTarget { override fun print(str: String) {
                     executorState["consoleText"] = executorState["consoleText"]!! as String + str
                 } },
@@ -51,7 +54,7 @@ import kotlin.math.min
             )
         }
     }
-    Row(modifier = Modifier.fillMaxWidth()) {
+    Row(modifier = maxWidth) {
         TextField(executorState["path"]!! as String, { updated -> executorState["path"] = updated })
         HorizontalSpacer(10.dp)
         Button({
@@ -64,11 +67,11 @@ import kotlin.math.min
             try {
                 val compiledGasm = Compiler().compileGasm(executorState["content"]!! as String)
                 println("Compiled gASM ${compiledGasm.toList()}")
-                state.processor.reset()
-                state.ram.load(compiledGasm, state.programReadStart.toInt())
+                STATE.processor.reset()
+                STATE.ram.load(compiledGasm, STATE.programReadStart.toInt())
                 executorState["programLoaded"] = true
                 executorState["programLength"] = (compiledGasm.size - 3).toUInt()
-                executorState["programCounter"] = state.programReadStart + 3u
+                executorState["programCounter"] = STATE.programReadStart + 3u
             } catch(e: Exception) { println("Error: ${e.message ?: "Unknown Error"}") }
         }) { Text("Compile") }
         HorizontalSpacer(10.dp)
@@ -77,7 +80,7 @@ import kotlin.math.min
             executorState["consoleText"] = ""
             crScope.launch {
                 try {
-                    state.processor.execute(state.programReadStart.toUShort())
+                    STATE.processor.execute(STATE.programReadStart)
                 } catch(e: Exception) { executorState["consoleText"] = "Error: ${e.message ?: "Unknown Error"}" }
             }
             setDebug(false)
@@ -87,7 +90,7 @@ import kotlin.math.min
             setDebug(true)
             crScope.launch {
                 try {
-                    state.processor.execute(state.programReadStart.toUShort()) { pc -> ((executorState["programCounter"] as UInt).toUShort() == pc) }
+                    STATE.processor.execute(STATE.programReadStart) { pc -> ((executorState["programCounter"] as UInt).toUShort() == pc) }
                 } catch(e: Exception) { executorState["consoleText"] = e.message ?: "Unknown Error" }
                 setDebug(false)
             }
@@ -98,7 +101,7 @@ import kotlin.math.min
         }, enabled = debug) { Icon(Icons.Filled.FastForward, "") }
     }
     VerticalSpacer(12.dp)
-    TextField(executorState["content"]!! as String, { u -> executorState["content"] = u}, modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f))
+    TextField(executorState["content"]!! as String, { u -> executorState["content"] = u}, modifier = maxWidth.fillMaxHeight(0.8f))
     VerticalSpacer(5.dp)
-    TextField(executorState["consoleText"]!! as String, {}, readOnly = true, modifier = Modifier.fillMaxSize())
+    TextField(executorState["consoleText"]!! as String, {}, readOnly = true, modifier = maxSize)
 }

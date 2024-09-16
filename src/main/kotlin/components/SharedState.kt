@@ -4,13 +4,13 @@ import Processor
 import Ram
 
 class SharedState private constructor() {
-    var memory: UInt = 32768u
-    var stackSize: UInt = 1024u
-    var stackStart: UInt = 0u
-    var programMemory: UInt = 16384u
-    var programMemoryStart: UInt = 16384u
+    var memory: UShort = 32768u
+    var stackSize: UByte = 255u
+    var stackStart: UShort = 0u
+    var programMemory: UShort = 16384u
+    var programMemoryStart: UShort = 16384u
     var ram = Ram(memory.toInt())
-    var programReadStart: UInt = 16384u
+    var programReadStart: UShort = 16384u
     lateinit var processor: Processor
 
     fun updateSettings() {
@@ -18,6 +18,6 @@ class SharedState private constructor() {
     }
 
     companion object {
-        val state = SharedState()
+        val STATE = SharedState()
     }
 }

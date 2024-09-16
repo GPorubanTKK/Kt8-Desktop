@@ -2,71 +2,48 @@ package pages
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Button
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
-import components.HorizontalSpacer
-import components.SharedState
-import components.VerticalSpacer
+import components.*
+import components.SharedState.Companion.STATE
 
-@Composable fun Settings() = Column(modifier = Modifier.fillMaxSize()) {
-    var memory by remember { mutableStateOf(SharedState.state.memory) }
-    var stackSize by remember { mutableStateOf(SharedState.state.stackSize) }
-    var stackStart by remember { mutableStateOf(SharedState.state.stackStart) }
-    var programSize by remember { mutableStateOf(SharedState.state.programMemory) }
-    var programStart by remember { mutableStateOf(SharedState.state.programMemoryStart) }
+@Composable fun Settings() = Column(modifier = maxSize) {
+    @Composable fun SettingsRow(textBefore: String, textAfter: String, text: String, handle: (Int) -> Unit) {
+        Row(modifier = maxWidth, verticalAlignment = Alignment.CenterVertically) {
+            HorizontalSpacer(2.dp)
+            Text("$textBefore ")
+            HorizontalSpacer(1.dp)
+            NumTextField(text, 65536, 0, onUpdate = handle)
+            Text(" $textAfter")
+        }
+    }
+
+    var memory by remember { mutableStateOf(STATE.memory) }
+    var stackSize by remember { mutableStateOf(STATE.stackSize) }
+    var stackStart by remember { mutableStateOf(STATE.stackStart) }
+    var programSize by remember { mutableStateOf(STATE.programMemory) }
+    var programStart by remember { mutableStateOf(STATE.programMemoryStart) }
 
     VerticalSpacer(5.dp)
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        HorizontalSpacer(2.dp)
-        Text("Max system memory (max 64kb) ")
-        HorizontalSpacer(1.dp)
-        TextField("$memory", { if(it.matches("^\\d+$".toRegex()) && it.toUInt() <= 65536u) memory = it.toUInt() })
-        Text(" bytes")
-    }
+    SettingsRow("System Memory (max 64kb)", "bytes", "$memory") { memory = it.toUShort() }
     VerticalSpacer(5.dp)
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        HorizontalSpacer(2.dp)
-        Text("Stack size ")
-        HorizontalSpacer(1.dp)
-        TextField("$stackSize", { if(it.matches("^\\d+$".toRegex()) && it.toUInt() <= 65536u) stackSize = it.toUInt() })
-        Text(" bytes")
-    }
+    SettingsRow("Stack size (max 255b)", "bytes", "$stackSize") { stackSize = it.toUByte() }
     VerticalSpacer(5.dp)
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        HorizontalSpacer(2.dp)
-        Text("Stack start position ")
-        HorizontalSpacer(1.dp)
-        TextField("$stackStart", { if(it.matches("^\\d+$".toRegex()) && it.toUInt() <= 65536u) stackStart = it.toUInt() })
-    }
+    SettingsRow("Stack start byte", "", "$stackStart") { stackStart = it.toUShort() }
     VerticalSpacer(5.dp)
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        HorizontalSpacer(2.dp)
-        Text("Program memory size ")
-        HorizontalSpacer(1.dp)
-        TextField("$programSize", { if(it.matches("^\\d+$".toRegex()) && it.toUInt() <= 65536u) programSize = it.toUInt() })
-        Text(" bytes")
-    }
+    SettingsRow("Size of program memory", "bytes", "$programSize") { programSize = it.toUShort() }
     VerticalSpacer(5.dp)
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        HorizontalSpacer(2.dp)
-        Text("Program memory start position ")
-        HorizontalSpacer(1.dp)
-        TextField("$programStart", { if(it.matches("^\\d+$".toRegex()) && it.toUInt() <= 65536u) programStart = it.toUInt() })
-    }
+    SettingsRow("Start of program memory", "", "$programStart") { programStart = it.toUShort() }
     VerticalSpacer(10.dp)
     Button({
-        SharedState.state.memory = memory
-        SharedState.state.stackSize = stackSize
-        SharedState.state.stackStart = stackStart
-        SharedState.state.programMemory = programSize
-        SharedState.state.programMemoryStart = programStart
-        SharedState.state.updateSettings()
+        STATE.memory = memory
+        STATE.stackSize = stackSize
+        STATE.stackStart = stackStart
+        STATE.programMemory = programSize
+        STATE.programMemoryStart = programStart
+        STATE.updateSettings()
     }) { Text("Apply Settings") }
 }
