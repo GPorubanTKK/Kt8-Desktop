@@ -18,11 +18,12 @@ import components.SharedState.Companion.STATE
 import components.maxSize
 
 @OptIn(ExperimentalStdlibApi::class)
-@Composable fun Profiler(memUpdate: Int) = Column(modifier = maxSize) {
+@Composable fun Profiler(memUpdate: MutableState<Int>) = Column(modifier = maxSize) {
+    val (get, _) = memUpdate
     Row(modifier = maxSize) {
         val heapListState = rememberLazyListState()
         LazyColumn(state = heapListState) {//all memory
-            itemsIndexed(STATE.ram.toList().chunked(16), key = { index, _ -> memUpdate + index }) { index, bytes ->
+            itemsIndexed(STATE.ram.toList().chunked(16), key = { index, _ -> get + index }) { index, bytes ->
                 Row(
                     modifier = Modifier.fillMaxWidth(0.8f).border(0.05.dp, Color(0xFFE6E6E6)),
                     horizontalArrangement = Arrangement.SpaceBetween

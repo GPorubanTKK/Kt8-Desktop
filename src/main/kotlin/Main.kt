@@ -1,21 +1,21 @@
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import components.HorizontalSpacer
-import components.NavIcon
+import components.*
 import components.SharedState.Companion.STATE
-import components.rememberMutableStateOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import pages.Executor
@@ -24,84 +24,68 @@ import pages.Profiler
 import pages.Settings
 import kotlin.math.min
 
-fun main() {
-    application {
-        Window(
-            title = "Kt8 Emulator",
-            onCloseRequest = ::exitApplication
-        ) {
-            val (getDebug, setDebug) = rememberMutableStateOf(false)
-            val (getMu, setMu) = rememberMutableStateOf(0)
-            val globalCrScope = rememberCoroutineScope { Dispatchers.IO }
-            val executorStateMap = remember { mutableStateMapOf<String, Any>(
-                "path" to "${System.getProperty("user.home")}\\Desktop\\src.gasm",
-                "content" to "",
-                "consoleText" to "",
-                "programLoaded" to false,
-                "programLength" to 0u,
-                "programCounter" to STATE.programReadStart + 3u
-            ) }
-            Column(modifier = Modifier.fillMaxSize()) {
-                val (destination, setDestination) = rememberMutableStateOf(Destination.Executor)
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.1f)
-                        .padding(bottom = 4.dp)
-                        .shadow(1.dp)
-                ) {
+fun main() = application {
+    Window(title = "Kt8 Emulator", onCloseRequest = ::exitApplication) {
+        val debugState = rememberMutableStateOf(false); val (debug, setDebug) = debugState
+        val memoryUpdate = rememberMutableStateOf(0)
+        val loadPath = rememberMutableStateOf("${System.getProperty("user.home")}\\Desktop\\src.gasm")
+        val editorContent = rememberMutableStateOf("")
+        val consoleContent = rememberMutableStateOf(""); val (_, setConsole) = consoleContent
+        val isProgramLoaded = rememberMutableStateOf(false)
+        val lengthOfProgram = rememberMutableStateOf<UShort>(0u); val (length, _) = lengthOfProgram
+        val debugProgramCounter = rememberMutableStateOf(STATE.programReadStart + 3u); val (counter, setCounter) = debugProgramCounter
+        val globalCrScope = rememberCoroutineScope { Dispatchers.IO }
+        Column(modifier = maxSize) {
+            val (destination, setDestination) = rememberMutableStateOf(Destination.Executor)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = maxWidth.fillMaxHeight(0.1f).padding(bottom = 4.dp).shadow(1.dp)) {
+                HorizontalSpacer(10.dp)
+                Destination.entries.forEach {
+                    NavIcon(it.title, it.icon, it, destination, setDestination)
+                    HorizontalSpacer(2.dp)
+                }
+                HorizontalSpacer(25.dp)
+                if(destination != Destination.Executor) {
+                    Button({
+                        setConsole("")
+                        setCounter(STATE.programReadStart + 3u)
+                        globalCrScope.launch {
+                            STATE.processor.execute(STATE.programReadStart)
+                        }
+                        setDebug(false)
+                    }) { Text("Run") }
                     HorizontalSpacer(10.dp)
-                    Destination.entries.forEach {
-                        NavIcon(
-                            it.title,
-                            it.icon,
-                            it,
-                            destination,
-                            setDestination
-                        )
-                        HorizontalSpacer(2.dp)
-                    }
-                    HorizontalSpacer(25.dp)
-                    if(destination != Destination.Executor) {
-                        Button({
-                            executorStateMap["programLoaded"] = false
-                            executorStateMap["consoleText"] = ""
-                            executorStateMap["programCounter"] = STATE.programReadStart + 3u
-                            globalCrScope.launch {
-                                STATE.processor.execute(STATE.programReadStart)
-                            }
+                    Button({
+                        setDebug(true)
+                        setCounter(STATE.programReadStart.toUInt())
+                        globalCrScope.launch {
+                            STATE.processor.execute(STATE.programReadStart) { pc -> counter.toUShort() == pc }
                             setDebug(false)
-                        }) { Text("Run") }
-                        HorizontalSpacer(10.dp)
-                        Button({
-                            setDebug(true)
-                            executorStateMap["programCounter"] = STATE.programReadStart
-                            globalCrScope.launch {
-                                STATE.processor.execute(STATE.programReadStart) { pc ->
-                                    ((executorStateMap["programCounter"] as UInt).toUShort() == pc)
-                                }
-                                setDebug(false)
-                            }
-                        }) { Text("Debug") }
-                        HorizontalSpacer(10.dp)
-                        Button({
-                            executorStateMap["programCounter"] = min(executorStateMap["programLength"] as UInt + executorStateMap["programCounter"] as UInt, executorStateMap["programCounter"] as UInt + 3u)
-                        }, enabled = getDebug) { Icon(Icons.Filled.FastForward, "") }
+                        }
+                    }) { Text("Debug") }
+                    HorizontalSpacer(10.dp)
+                    Button({ setCounter(min(length + counter, counter + 3u)) }, enabled = debug) {
+                        Icon(Icons.Filled.FastForward, "")
                     }
                 }
-                Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
-                    when (destination) {
-                        Destination.Executor -> Executor(
-                            getDebug,
-                            setDebug,
-                            executorStateMap,
-                            setMu
-                        )
-                        Destination.Screen -> Graphics()
-                        Destination.Profiler -> Profiler(getMu)
-                        Destination.Settings -> Settings()
-                    }
+            }
+            Column(modifier = maxSize.padding(10.dp)) {
+                when (destination) {
+                    Destination.Executor -> Executor(
+                        loadPath,
+                        editorContent,
+                        consoleContent,
+                        isProgramLoaded,
+                        lengthOfProgram,
+                        debugProgramCounter,
+                        memoryUpdate,
+                        debugState,
+                        globalCrScope
+                    )
+                    Destination.Screen -> Graphics()
+                    Destination.Profiler -> Profiler(memoryUpdate)
+                    Destination.Settings -> Settings()
                 }
             }
         }
